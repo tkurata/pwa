@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv='content-type' content='text/html; charset=utf-8' />
+	<title>MapFan API Leafletサンプル</title>
+	<link rel='stylesheet' href='https://unpkg.com/leaflet@1.3.4/dist/leaflet.css'
+		integrity='sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=='
+		crossorigin='' />
+	<script src='https://unpkg.com/leaflet@1.3.4/dist/leaflet.js'
+		integrity='sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=='
+		crossorigin=''></script>
+	<style type="text/css">
+		html,
+		body {
+			font-family: 'Yu Gothic', sans-serif;
+			height: 100%;
+			width: 100%;
+			margin: 0;
+			padding: 0;
+		}
+
+		#map {
+			width: 100%;
+			height: 100%;
+		}
+
+		.leafvar-container {
+			background-color: rgba(169, 196, 223, 1.0);
+		}
+	</style>
+	<script type='text/javascript'>
+
+		// MapFan API認証ID
+		var authId = '3326020e750ac937e6eaab6ef3e48d5ee4be7a844c294004'
+		var today = new Date()
+		var now = today.getFullYear().toString() + today.getMonth().toString() + today.getDate().toString() + today.getDay().toString() + today.getHours().toString() + today.getMinutes().toString() + today.getSeconds().toString()
+		// アクセスキー
+		var key
+
+		// Leafletインスタンス
+		var map
+
+		// ★MapFan API の 認証API【テスト利用URL】
+		var mapfanAuthUrl = 'https://api-auth-pre.mapfan.com/v1/auth?date=' + now + '&callback=authResult'
+
+		// 認証処理
+		window.onload = function () {
+			if (authId === '') {
+				alert("authId に、MapFan API の認証ID をご指定ください。")
+				return
+			}
+			mapfanAuthUrl += '&appid=' + authId
+
+			// API実行
+			var script = document.createElement('script')
+			script.src = mapfanAuthUrl
+			document.head.appendChild(script)
+		}
+
+		// ★MapFan API の 認証コールバック
+		function authResult(result) {
+			if (result.status !== "success") {
+				alert(result.status)
+				return
+			}
+
+			// アクセスキー
+			key = result.key
+
+			// 東京駅 スケール17
+			map = L.map('map').setView([35.68116552628331, 139.76719388020982], 17)
+
+			// ★MapFan API 地図画像取得API【テスト利用URL】 を、Leaflet の tileLayerソースに指定
+			L.tileLayer('http://api-map-pre.mapfan.com/v1/map?key=' + key + '&tilematrix=EPSG:3857:{z}&tilerow={y}&tilecol={x}&logo=on&bldgname=on', {
+				maxZoom: 21,
+				minZoom: 6,
+				attribution: 'Map &copy INCREMENT P CORPORATION <a href="https://api-auth-pre.mapfan.com/terms/mfapi_terms.pdf">利用規約</a>',
+			}).addTo(map)
+
+			// スケーラー
+			L.control.scale({ maxWidth: 200, position: 'bottomleft', imperial: false }).addTo(map)
+		}
+		
+	</script>
+</head>
+
+<body>
+	<div id='map'></div>
+</body>
+
+</html>
