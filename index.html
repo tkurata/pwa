@@ -16,7 +16,6 @@
 		}
 	</style>
 	<script type='text/javascript' src='https://api-auth-pre.mapfan.com/v2/jslib/js/map/mfjsapi'></script>
-	<script type='text/javascript' src='./appid.js'></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 	<script type='text/javascript'>
 		
@@ -26,7 +25,7 @@
 			// ルートAPIサーバを設定します。
 			Mfapi.routeHost = 'api-route-pre.mapfan.com';
 			// ※ appidはお客様の認証ＩＤを設定してください。
-			Mfapi.auth(appid, task_func);
+			Mfapi.auth('68254520d0a2d137e826442d68cef1f2f683ac3d24eb1ca4', task_func);
 		}
 		
 		//### 認証後コールバック関数 ###
