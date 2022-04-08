@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv='content-type' content='text/html; charset=utf-8' />
+	<title>sample</title>
+	<style type="text/css">
+		html, body {
+        	height: 2048px;
+        	width: 2048px;
+			margin: 0;
+			padding: 0;
+		}
+		#map {
+			height: 2048px;
+			width: 2048px;
+			background-color: aqua;
+		}
+	</style>
+	<script type='text/javascript' src='https://api-auth-pre.mapfan.com/v2/jslib/js/map/mfjsapi'></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.9.0/html-to-image.min.js" integrity="sha512-hI+X0tF436khDUBN21w65R/x9r74gU8e8OpL6T8JFsEFUtIT8L+YAPj5iGFex9IC7pmqGlA0KhxlDFSAckxeaw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/downloadjs/1.4.8/download.min.js" integrity="sha512-WiGQZv8WpmQVRUFXZywo7pHIO0G/o3RyiAJZj8YXNN4AV7ReR1RYWVmZJ6y3H06blPcjJmG/sBpOVZjTSFFlzQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script type='text/javascript'>
+		
+		//### 認証処理と地図APIサーバ設定 ###
+		window.onload = function() {
+			Mfapi.mapHost = 'api-map-pre.mapfan.com';
+			// ルートAPIサーバを設定します。
+			Mfapi.routeHost = 'api-route-pre.mapfan.com';
+			// ※ appidはお客様の認証ＩＤを設定してください。
+			Mfapi.auth('3326020e750ac937e6eaab6ef3e48d5ee4be7a844c294004', task_func);
+		}
+		
+		//### 認証後コールバック関数 ###
+		function task_func(authStatus) {
+			//### 認証結果確認 ###
+			if( authStatus != 'success' ) {
+				return;
+			}
+			//### 地図作成条件の設定 ###
+			var options = {
+				mapScale : 11,
+				logoSettings : "on",
+				contour: "on",
+				bldgName : "on",
+				landmarkIcon: "on",
+			};
+			//### 地図作成処理 ###
+			Mfapi.mapCreate('map',options);
+			
+			//### ジオメトリーレイヤー作成処理 ###
+			// ポイントを表示するためのジオメトリレイヤーを作成します。
+			Mfapi.Map.addGeometryLayer('gLayer');
+			
+			// GeoJSONのフィーチャーのスタイル関数を作成します。
+			var styleFunction = function(feature) {
+				var style;
+				// フィーチャーのGeometryタイプ毎に指定する場合
+				switch (feature.geometry.type) {
+					case 'Point':
+					case 'MultiPoint':
+						style = new Mfapi.Map.GeoJSONStyle.Point();
+						style.imageUrl = './img/marker-red.png';
+						break;
+					case 'LineString':
+					case 'MultiLineString':
+						style = new Mfapi.Map.GeoJSONStyle.LineString();
+						style.lineColor = '#00ff00';
+						style.lineWidth = 2;
+						break;
+					case 'Polygon':
+					case 'MultiPolygon':
+						style = new Mfapi.Map.GeoJSONStyle.Polygon();
+						style.edgeColor = '#0000ff';
+						style.edgeWidth = 2;
+						style.fillColor = '#0080ff';
+						break;
+					case 'GeometryCollection':
+						style = new Mfapi.Map.GeoJSONStyle.GeometryCollection();
+						style.imageUrl = './img/marker-blue.png';
+						style.edgeColor = '#ffaa00';
+						style.edgeWidth = 2;
+						style.fillColor = '#ffffcc';
+						break;
+				}
+				return style;
+			};
+			
+			//GeoJSON_Sample.jsonのサンプルを指定してGeoJSONレイヤーの作成条件を作成します。
+			var layerOptions = {
+				url: './data/geojson/tokyo23.geojson',
+				styleFunction: styleFunction
+			};
+			
+			//GeoJSONレイヤーを作成します。
+			Mfapi.Map.addGeoJSONLayer('geoJSONLayer', layerOptions);
+
+			setTimeout(function() {
+				// html2canvas(document.querySelector("#map"), {
+				// 	allowTaint: true,
+				// 	foreignObjectRendering: true,
+				// 	useCORS: true,
+				// })
+				// 	.then(canvas => {
+				// 		let downloadEle = document.createElement("a");
+				// 		downloadEle.href = canvas.toDataURL("image/png");
+				// 		downloadEle.download = "map.png";
+				// 		downloadEle.click();
+				// });
+
+				// var canvas = document.getElementsByClassName('ol-unselectable')[0];
+				// console.log(canvas)
+				// let downloadEle = document.createElement("a");
+				// setTimeout(function() {
+				// 	downloadEle.href = canvas.toDataURL("image/png");
+				// 	downloadEle.download = "map.png";
+				// 	downloadEle.click();
+				// }, 500);
+
+				const canvas = document.getElementsByClassName('ol-unselectable')[0];
+				const base64 = canvas.toDataURL('image/png');
+
+				const tmp  = base64.split(",");
+				const data = atob(tmp[1]);
+				const mime = tmp[0].split(":")[1].split(";")[0];
+				
+				// Blobのコンストラクタに食わせる値を作成
+				let buff = new Uint8Array(data.length);
+				for (let i = 0; i < data.length; i++) {
+					buff[i] = data.charCodeAt(i);
+				}
+
+				const blob = new Blob([buff], { type: mime });
+				const dataURI = window.URL.createObjectURL(blob);
+				console.log(dataURI);
+
+				let downloadEle = document.createElement("a");
+				downloadEle.href = dataURI;
+				downloadEle.download = "map.png";
+				downloadEle.click();
+			}, 10000);
+		}
+	</script>
+</head>
+<body>
+	<div id='map'></div>
+</body>
+</html>
